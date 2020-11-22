@@ -6,13 +6,13 @@ from tkinter.filedialog import *
 from solar_vis import *
 from solar_model import *
 from solar_input import *
+import matplotlib.pyplot as plt
 
 perform_execution = False
 """Флаг цикличности выполнения расчёта"""
 
 physical_time = 0
-"""Физическое время от нача
-ла расчёта.
+"""Физическое время от начала расчёта.
 Тип: float"""
 
 displayed_time = None
@@ -20,14 +20,12 @@ displayed_time = None
 Тип: переменная tkinter"""
 
 time_step = None
-"""Шаг по в
-ремени при моделировании.
+"""Шаг по времени при моделировании.
 Тип: float"""
 
 space_objects = []
 """Список космических объектов."""
 
-x
 
 def execution():
     """Функция исполнения -- выполняется циклически, вызывая обработку всех небесных тел,
@@ -57,6 +55,7 @@ def start_execution():
     start_button['command'] = stop_execution
 
     execution()
+    collecting_statistics()
     print('Started execution...')
 
 
@@ -69,6 +68,43 @@ def stop_execution():
     start_button['text'] = "Start"
     start_button['command'] = start_execution
     print('Paused execution.')
+
+
+def collecting_statistics():
+    for body in space_objects:
+        if body.type == 'planet':
+            body.history_distance.append((body.distance))
+            body.history_speed.append((body.speed))
+            body.history_x.append((body.x))
+            body.history_y.append((body.y))
+
+    if perform_execution:
+        space.after(101 - int(time_speed.get()), collecting_statistics)
+
+
+def show_statistics():
+    for body in space_objects:
+        if body.type == 'planet':
+            plt.figure()
+            plt.plot(body.history_speed)
+            plt.title('speed/time')
+            plt.ylabel('speed')
+            plt.xlabel('time, *10^(5)')
+            plt.figure()
+            plt.plot(body.history_distance)
+            plt.title('distance/time')
+            plt.ylabel('distance')
+            plt.xlabel('time, *10^(5)')
+            plt.figure()
+            plt.plot(body.history_distance, body.history_speed)
+            plt.title('speed/distance')
+            plt.ylabel('speed')
+            plt.xlabel('distance')
+            plt.plot(body.history_x, body.history_y)
+            plt.title('y/x')
+            plt.ylabel('y')
+            plt.xlabel('x')
+            plt.show()
 
 
 def open_file_dialog():
@@ -138,10 +174,12 @@ def main():
     scale = tkinter.Scale(frame, variable=time_speed, orient=tkinter.HORIZONTAL)
     scale.pack(side=tkinter.LEFT)
 
-    load_file_button = tkinter.Button(frame, text="Open file...", command=open_file_dialog)
+    load_file_button = tkinter.Button(frame, text="Open file", command=open_file_dialog)
     load_file_button.pack(side=tkinter.LEFT)
-    save_file_button = tkinter.Button(frame, text="Save to file...", command=save_file_dialog)
+    save_file_button = tkinter.Button(frame, text="Save", command=save_file_dialog)
     save_file_button.pack(side=tkinter.LEFT)
+    show_stat_button = tkinter.Button(frame, text="Show stat", command=show_statistics)
+    show_stat_button.pack(side=tkinter.LEFT)
 
     displayed_time = tkinter.StringVar()
     displayed_time.set(str(physical_time) + " seconds gone")
@@ -149,7 +187,9 @@ def main():
     time_label.pack(side=tkinter.RIGHT)
 
     root.mainloop()
+
     print('Modelling finished!')
+
 
 if __name__ == "__main__":
     main()
