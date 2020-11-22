@@ -71,6 +71,7 @@ def stop_execution():
 
 
 def collecting_statistics():
+    '''Cобирает статистику для построения графиков'''
     for body in space_objects:
         if body.type == 'planet':
             body.history_distance.append((body.distance))
@@ -83,6 +84,7 @@ def collecting_statistics():
 
 
 def show_statistics():
+    '''Cтроит графики'''
     for body in space_objects:
         if body.type == 'planet':
             plt.figure()
